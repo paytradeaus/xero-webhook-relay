@@ -1,0 +1,35 @@
+export default {
+  async fetch(request, env) {
+    // Only allow POST requests (webhooks)
+    if (request.method !== 'POST') {
+      return new Response('Method not allowed', { status: 405 });
+    }
+
+    // Your Replit app URL
+    const targetUrl = 'https://paytradeaus.replit.app/xero-webhook';
+
+    try {
+      // Clone the request and add required headers
+      const body = await request.text();
+      
+      const newHeaders = new Headers(request.headers);
+      newHeaders.set('X-Requested-With', 'XMLHttpRequest');
+      newHeaders.set('Origin', 'https://api.xero.com');
+      
+      // Forward to your Replit app
+      const response = await fetch(targetUrl, {
+        method: 'POST',
+        headers: newHeaders,
+        body: body,
+      });
+
+      // Return the response from your app
+      return new Response(await response.text(), {
+        status: response.status,
+        headers: response.headers,
+      });
+    } catch (error) {
+      return new Response('Relay error: ' + error.message, { status: 500 });
+    }
+  },
+};
